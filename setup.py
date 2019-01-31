@@ -23,8 +23,8 @@ _author = re.search(r'^__author__\s*=\s*"(.*)"', _meta, re.M).group(1)
 _author_email = re.search(r'^__author_email__\s*=\s*"(.*)"', _meta, re.M).group(1)
 
 setup(
-    author="Kirill Klenov",
-    author_email='horneds@gmail.com',
+    author=_author,
+    author_email=_author_email,
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
@@ -36,14 +36,14 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     description="A helper to call REST API from aiohttp",
-    license="MIT license",
+    license=_license,
     long_description=_readme + '\n\n' + _history,
     include_package_data=True,
-    keywords='aiorest_client',
+    keywords='aiorest_client aiohttp rest api async',
     name='aiorest_client',
     py_modules=['aioauth_client'],
     url='https://github.com/klen/aiorest_client',
-    version='0.1.0',
+    version=_version,
     zip_safe=False,
     install_requires=[
         l for l in _read('requirements.txt').split('\n') if l and not l.startswith('#')
