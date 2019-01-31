@@ -10,7 +10,7 @@ from aiohttp.web import HTTPError
 
 __author__ = "Kirill Klenov"
 __author_email__ = "horneds@gmail.com"
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 __license__ = "MIT license"
 
 
