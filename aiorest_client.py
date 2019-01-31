@@ -5,7 +5,7 @@ import posixpath
 import asyncio
 import logging
 import aiohttp
-from aiohttp.web import HTTPError, Response
+from aiohttp.web import HTTPError
 
 
 __author__ = "Kirill Klenov"
@@ -15,6 +15,11 @@ __license__ = "MIT license"
 
 
 AIOHTTP_OPTIONS = set(inspect.signature(aiohttp.request).parameters)
+
+
+def acoro(value):
+    async def coro():
+        return value
 
 
 class APIError(HTTPError):
@@ -130,10 +135,9 @@ class APIClient:
             json, data = data, None
 
         # Process middlewares
-        if self.middlewares:
-            for middleware in self.middlewares:
-                method, url, options = middleware(method, url, dict(options, data=data, json=json))
-                data, json = options.get('data'), options.get('json')
+        for middleware in self.middlewares:
+            method, url, options = middleware(method, url, dict(options, data=data, json=json))
+            data, json = options.get('data'), options.get('json')
 
         if not url.startswith('http'):
             url = posixpath.join(self.root_url, url.lstrip('/'))
@@ -143,15 +147,19 @@ class APIClient:
 
         response = None
         try:
-           silent = options.get('silent')
-           response = await self.session.request(method, url, **req_opts)
+            silent = options.get('silent')
+            response = await self.session.request(method, url, **req_opts)
+            if not silent and (response.status / 200 > 2):
+                reason = await response.text()
+                self.logger.error(reason)
+                raise APIError(reason, response.status)
 
         except asyncio.TimeoutError:
-           response = 524
-           if not silent:
-               raise APIError('Timeout Error', 524)
+            response = 524
+            if not silent:
+                raise APIError('Timeout Error', response)
 
-           return None
+            return None
 
         finally:
             callback = options.get('callback')
@@ -159,33 +167,28 @@ class APIClient:
                 await callback(method, url, options, response=response)
 
         self.logger.info('Response %s: %r' % (response.status, response.headers))
-        close = options.get('close')
-        if close:
+        if options.get('close'):
             response.close()
             return response
 
-        parse = options.get('parse', self.parse)
-        if not parse:
-           return response
-
-        if response.status / 200 > 2:
-           reason = await response.text()
-           self.logger.error(reason)
-           if not silent:
-               raise APIError(reason, response.status)
-           return response
-
-        ct = response.headers.get('content-type', '')
-        if ct.startswith('application/json'):
-           try:
-               return await response.json()
-           except ValueError:
-               return await response.text()
-
-        elif ct.startswith('multipart'):
-           return await response.post()
-
-        if ct.startswith('application') or ct.startswith('text'):
-           return await response.text()
+        if options.get('parse', self.parse):
+            return await self.parse_response(response)
 
         return response
+
+    def parse_response(cls, response):
+        """Parse body for given response by content-type.
+
+        :returns: a parser's coroutine
+        """
+        ct = response.headers.get('content-type', '')
+        if ct.startswith('application/json'):
+            try:
+                return response.json()
+            except ValueError:
+                return response.text()
+
+        if ct.startswith('multipart'):
+            return response.post()
+
+        return response.text()
