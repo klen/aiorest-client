@@ -3,9 +3,8 @@ include CONTRIBUTING.rst
 include HISTORY.rst
 include LICENSE
 include README.rst
+include aiorest_client.py
+include requirements.txt
 
-recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
-
-recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
