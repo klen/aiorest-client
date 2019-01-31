@@ -97,3 +97,31 @@ $(VIRTUAL_ENV): requirements.txt
 $(VIRTUAL_ENV)/bin/py.test: $(VIRTUAL_ENV) requirements_test.txt
 	@$(VIRTUAL_ENV)/bin/pip install -r requirements_test.txt
 	@touch $(VIRTUAL_ENV)/bin/py.test
+
+# ==============
+#  Bump version
+# ==============
+
+.PHONY: release
+VERSION?=minor
+# target: release - Bump version
+release: $(VIRTUAL_ENV)
+	@$(VIRTUAL_ENV)/bin/pip install bumpversion
+	@$(VIRTUAL_ENV)/bin/bumpversion $(VERSION)
+	@git checkout master
+	@git merge develop
+	@git checkout develop
+	@git push origin develop master
+	@git push --tags
+
+.PHONY: minor
+minor: release
+
+.PHONY: patch
+patch:
+	make release VERSION=patch
+
+.PHONY: major
+major:
+	make release VERSION=major
+
