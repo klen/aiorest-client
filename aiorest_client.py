@@ -80,6 +80,8 @@ class APIDescriptor(object):
 class APIClient:
     """Working with an API."""
 
+    Error = APIError
+
     def __init__(self, root_url, parse=True, timeout=10, logger=None,
                  session=None, json=True, **defaults):
         """Initialize the client."""
@@ -136,7 +138,8 @@ class APIClient:
 
         # Process middlewares
         for middleware in self.middlewares:
-            method, url, options = middleware(method, url, dict(options, data=data, json=json))
+            method, url, options = await middleware(
+                method, url, dict(options, data=data, json=json))
             data, json = options.get('data'), options.get('json')
 
         if not url.startswith('http'):

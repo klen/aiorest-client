@@ -34,8 +34,15 @@ def test_api_client(loop):
     client = APIClient('https://api.github.com', headers={
         'User-Agent': 'AIO REST CLIENT %s' % __version__
     })
+    assert client.Error
+
     with pytest.raises(APIError):
         res = loop.run_until_complete(client.api.events.post({'name': 'New Event'}))
+
+    @client.middleware
+    async def test_middleware(method, url, options):
+        options['headers']['X-Test'] = 'passed'
+        return method, url, options
 
     # Initialize a session
     loop.run_until_complete(client.startup())
