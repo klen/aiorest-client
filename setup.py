@@ -41,7 +41,7 @@ setup(
     include_package_data=True,
     keywords='aiorest_client aiohttp rest api async',
     name='aiorest_client',
-    py_modules=['aioauth_client'],
+    py_modules=['aiorest_client'],
     url='https://github.com/klen/aiorest_client',
     version=_version,
     zip_safe=False,
