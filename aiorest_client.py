@@ -116,9 +116,13 @@ class APIClient:
         """Return API descriptor."""
         return APIDescriptor(self.request)
 
-    def middleware(self, func):
+    def middleware(self, corofunc):
         """Register a given middleware."""
-        return self.middlewares.insert(0, func)
+        if not asyncio.iscoroutinefunction(corofunc):
+            raise ValueError('Middleware "%s" must be a coroutine function.' % corofunc.__name__)
+
+        self.middlewares.insert(0, corofunc)
+        return corofunc
 
     async def request(self, method, url, data=None, json=None, **options):
         """Do a request."""

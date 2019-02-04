@@ -39,10 +39,18 @@ def test_api_client(loop):
     with pytest.raises(APIError):
         res = loop.run_until_complete(client.api.events.post({'name': 'New Event'}))
 
+    with pytest.raises(ValueError):
+        @client.middleware
+        def test_middleware(method, url, options):
+            options['headers']['X-Test'] = 'passed'
+            return method, url, options
+
     @client.middleware
     async def test_middleware(method, url, options):
         options['headers']['X-Test'] = 'passed'
         return method, url, options
+
+    assert test_middleware
 
     # Initialize a session
     loop.run_until_complete(client.startup())
