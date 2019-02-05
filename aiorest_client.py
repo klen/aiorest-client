@@ -1,5 +1,6 @@
 """Make REST calls simplier."""
 
+import copy
 import inspect
 import posixpath
 import asyncio
@@ -133,7 +134,7 @@ class APIClient:
         # Process defaults
         for opt, val in self.defaults.items():
             if opt not in options:
-                options[opt] = val
+                options[opt] = copy.copy(val)
             elif isinstance(val, dict):
                 options[opt] = dict(self.defaults[opt], **options[opt])
 

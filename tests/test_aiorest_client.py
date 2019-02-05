@@ -58,6 +58,7 @@ def test_api_client(loop):
     res = loop.run_until_complete(client.api.users.klen())
     assert res
     assert isinstance(res, dict)
+    assert not 'X-Test' in client.defaults['headers']
 
     res = loop.run_until_complete(client.api.users.klen(parse=False))
     assert res.status == 200
