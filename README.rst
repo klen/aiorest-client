@@ -13,15 +13,11 @@ AIOREST Client
         :target: https://aiorest-client.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-
-.. image:: https://pyup.io/repos/github/klen/aiorest_client/shield.svg
-     :target: https://pyup.io/repos/github/klen/aiorest_client/
+.. image:: https://pyup.io/repos/github/klen/aiorest-client/shield.svg
+     :target: https://pyup.io/repos/github/klen/aiorest-client/
      :alt: Updates
 
-
-
 A helper to call REST API from aiohttp
-
 
 * Free software: MIT license
 * Documentation: https://aiorest-client.readthedocs.io.
