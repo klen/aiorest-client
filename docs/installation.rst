@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/klen/aiorest_client
+    $ git clone git://github.com/klen/aiorest-client
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/klen/aiorest_client/tarball/master
+    $ curl  -OL https://github.com/klen/aiorest-client/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/klen/aiorest_client
-.. _tarball: https://github.com/klen/aiorest_client/tarball/master
+.. _Github repo: https://github.com/klen/aiorest-client
+.. _tarball: https://github.com/klen/aiorest-client/tarball/master

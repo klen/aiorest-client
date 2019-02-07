@@ -4,4 +4,6 @@ Usage
 
 To use AIOREST Client in a project::
 
-    import aiorest_client
+    from aiorest_client import APIClient
+
+    client = APIClient('https://api.github.com')
