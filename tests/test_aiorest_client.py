@@ -1,5 +1,7 @@
 import asyncio
+import aiohttp
 import pytest
+import mock
 
 
 @pytest.fixture
@@ -40,6 +42,7 @@ def test_api_client(loop):
         res = loop.run_until_complete(client.api.events.post({'name': 'New Event'}))
 
     with pytest.raises(ValueError):
+
         @client.middleware
         def test_middleware(method, url, options):
             options['headers']['X-Test'] = 'passed'
@@ -55,15 +58,28 @@ def test_api_client(loop):
     # Initialize a session
     loop.run_until_complete(client.startup())
 
-    res = loop.run_until_complete(client.api.users.klen())
-    assert res
-    assert isinstance(res, dict)
+    async def response(value):
+        res = aiohttp.web.Response(content_type='application/json')
+        async def json():
+            return value
+        res.json = json
+        res.close = mock.Mock()
+        return res
+
+    with mock.patch.object(client.session, 'request') as mocked:
+        mocked.return_value = response({'test': 'passed'})
+        res = loop.run_until_complete(client.api.users.klen())
+        assert res == {'test': 'passed'}
+
     assert not 'X-Test' in client.defaults['headers']
 
-    res = loop.run_until_complete(client.api.users.klen(parse=False))
-    assert res.status == 200
+    with mock.patch.object(client.session, 'request') as mocked:
+        mocked.return_value = response({'test': 'passed'})
+        res = loop.run_until_complete(client.api.users.klen(parse=False))
+        assert res.status == 200
 
-    res = loop.run_until_complete(client.api.users.klen(close=True))
-    assert res.status == 200
-    with pytest.raises(Exception):
-        loop.run_until_complete(res.json())
+    with mock.patch.object(client.session, 'request') as mocked:
+        mocked.return_value = response({'test': 'passed'})
+        res = loop.run_until_complete(client.api.users.klen(close=True))
+        assert res.status == 200
+        assert res.close.called
