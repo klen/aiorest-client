@@ -48,13 +48,6 @@ def test_api_client(loop):
             options['headers']['X-Test'] = 'passed'
             return method, url, options
 
-    @client.middleware
-    async def test_middleware(method, url, options):
-        options['headers']['X-Test'] = 'passed'
-        return method, url, options
-
-    assert test_middleware
-
     # Initialize a session
     loop.run_until_complete(client.startup())
 
@@ -71,8 +64,6 @@ def test_api_client(loop):
         res = loop.run_until_complete(client.api.users.klen())
         assert res == {'test': 'passed'}
 
-    assert not 'X-Test' in client.defaults['headers']
-
     with mock.patch.object(client.session, 'request') as mocked:
         mocked.return_value = response({'test': 'passed'})
         res = loop.run_until_complete(client.api.users.klen(parse=False))
@@ -83,3 +74,38 @@ def test_api_client(loop):
         res = loop.run_until_complete(client.api.users.klen(close=True))
         assert res.status == 200
         assert res.close.called
+
+    with mock.patch.object(client.session, 'request') as mocked:
+        mocked.return_value = response({'test': 'passed'})
+        res = loop.run_until_complete(client.api.repos.klen['aiorest-client'].issues.post({
+            'title': 'test issue', 'body': 'Issue Body'
+        }))
+        mocked.assert_called_with(
+            'POST', 'https://api.github.com/repos/klen/aiorest-client/issues',
+            data=None,
+            headers={
+                'User-Agent': 'AIO REST CLIENT %s' % __version__,
+            },
+            json={'title': 'test issue', 'body': 'Issue Body'},
+        )
+
+    @client.middleware
+    async def test_middleware(method, url, options):
+        options['headers']['X-Test'] = 'passed'
+        return method, url, options
+
+    assert test_middleware
+
+    with mock.patch.object(client.session, 'request') as mocked:
+        mocked.return_value = response({'test': 'passed'})
+        res = loop.run_until_complete(client.api.users.klen())
+        assert res == {'test': 'passed'}
+
+        mocked.assert_called_with(
+            'GET', 'https://api.github.com/users/klen',
+            headers={
+                'User-Agent': 'AIO REST CLIENT %s' % __version__,
+                'X-Test': 'passed',
+            },
+        )
+    assert not 'X-Test' in client.defaults['headers']
