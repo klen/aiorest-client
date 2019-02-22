@@ -125,7 +125,7 @@ class APIClient:
         self.middlewares.insert(0, corofunc)
         return corofunc
 
-    async def request(self, method, url, data=None, json=None, **options):
+    async def request(self, method, url, **options):
         """Do a request."""
 
         if not self.session:
@@ -138,14 +138,13 @@ class APIClient:
             elif isinstance(val, dict):
                 options[opt] = dict(self.defaults[opt], **options[opt])
 
+        data, json = options.get('data'), options.get('json')
         if self.json and json is None and data is not None:
-            json, data = data, None
+            options['json'], options['data'] = data, None
 
         # Process middlewares
         for middleware in self.middlewares:
-            method, url, options = await middleware(
-                method, url, dict(options, data=data, json=json))
-            data, json = options.get('data'), options.get('json')
+            method, url, options = await middleware(method, url, options)
 
         if not url.startswith('http'):
             url = posixpath.join(self.root_url, url.lstrip('/'))
