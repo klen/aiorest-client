@@ -9,6 +9,22 @@ def loop():
     return asyncio.get_event_loop()
 
 
+@pytest.fixture
+def response():
+    def gen(value, content_type='application/json'):
+        async def coro():
+            res = aiohttp.web.Response(content_type=content_type)
+
+            async def json():
+                return value
+            res.json = json
+            res.close = mock.Mock()
+            return res
+        return coro()
+
+    return gen
+
+
 def test_api_descriptor():
     from aiorest_client import APIDescriptor
 
@@ -30,7 +46,7 @@ def test_api_descriptor():
     api.res[43]['get'].post({'q': 'test_q'})
 
 
-def test_api_client(loop):
+def test_api_client(loop, response):
     from aiorest_client import APIClient, APIError, __version__
 
     client = APIClient('https://api.github.com', headers={
@@ -50,14 +66,6 @@ def test_api_client(loop):
 
     # Initialize a session
     loop.run_until_complete(client.startup())
-
-    async def response(value):
-        res = aiohttp.web.Response(content_type='application/json')
-        async def json():
-            return value
-        res.json = json
-        res.close = mock.Mock()
-        return res
 
     with mock.patch.object(client.session, 'request') as mocked:
         mocked.return_value = response({'test': 'passed'})
@@ -108,4 +116,23 @@ def test_api_client(loop):
                 'X-Test': 'passed',
             },
         )
-    assert not 'X-Test' in client.defaults['headers']
+    assert 'X-Test' not in client.defaults['headers']
+
+
+def test_custom_sessions(loop, response):
+    from aiorest_client import APIClient
+
+    client = APIClient('https://api.github.com')
+
+    # Initialize a default session
+    loop.run_until_complete(client.startup())
+
+    session = aiohttp.ClientSession()
+
+    with mock.patch.object(client.session, 'request') as mocked:
+        with mock.patch.object(session, 'request') as mocked2:
+            mocked2.return_value = response({'test': 'passed'})
+            res = loop.run_until_complete(client.api.users.klen(session=session, close=True))
+            assert res is not None
+            assert not mocked.called
+            assert mocked2.called

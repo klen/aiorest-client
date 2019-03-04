@@ -125,11 +125,15 @@ class APIClient:
         self.middlewares.insert(0, corofunc)
         return corofunc
 
-    async def request(self, method, url, **options):
+    async def request(self, method, url, session=None, **options):
         """Do a request."""
 
-        if not self.session:
+        session = session or self.session
+        if not session:
             raise APIError('The client is not initialized.')
+
+        if not isinstance(session, aiohttp.ClientSession):
+            session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.timeout))
 
         # Process defaults
         for opt, val in self.defaults.items():
@@ -155,7 +159,7 @@ class APIClient:
         response = None
         try:
             silent = options.get('silent')
-            response = await self.session.request(method, url, **req_opts)
+            response = await session.request(method, url, **req_opts)
             if not silent and (response.status / 200 > 2):
                 reason = await response.text()
                 self.logger.error(reason)
