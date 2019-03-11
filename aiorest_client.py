@@ -37,17 +37,19 @@ class APIDescriptor(object):
 
     __methods = 'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'
 
-    def __init__(self, request, method='GET', path=None):
+    def __init__(self, request, method='GET', path=None, root=None):
         """Initialize the descriptor."""
         self.__request = request
-        self.__path = [''] if path is None else path
+        self.__path = [] if path is None else path
+        self.__root = root or ''
 
         method = method.upper()
         self.__method = method if method in self.__methods else 'GET'
 
     def __getitem__(self, piece):
         """Prepare a request."""
-        return APIDescriptor(self.__request, self.__method, self.__path + [str(piece).strip('/')])
+        return APIDescriptor(
+            self.__request, self.__method, self.__path + [str(piece).strip('/')], self.__root)
 
     def __getattr__(self, name):
         """Prepare a request."""
@@ -58,24 +60,24 @@ class APIDescriptor(object):
         return self[name]
 
     @property
-    def __url(self):
+    def url(self):
         """Return self url."""
-        return "/".join(self.__path)
+        return "%s%s" % (self.__root, "/" + "/".join(self.__path))
 
     def __str__(self):
         """String representation."""
-        return "%s %s" % (self.__method, self.__url)
+        return "%s %s" % (self.__method, self.url)
 
     def __repr__(self):
         """Internal representation."""
-        return 'URL %s' % self
+        return 'URL: %s' % self
 
     def __call__(self, *body, **opts):
         """Prepare a request."""
         if body:
             opts['params' if self.__method == 'GET' else 'data'] = body[0]
 
-        return self.__request(self.__method, self.__url, **opts)
+        return self.__request(self.__method, self.url, **opts)
 
 
 class APIClient:
@@ -115,7 +117,7 @@ class APIClient:
     @property
     def api(self):
         """Return API descriptor."""
-        return APIDescriptor(self.request)
+        return APIDescriptor(self.request, root=self.root_url)
 
     def middleware(self, corofunc):
         """Register a given middleware."""

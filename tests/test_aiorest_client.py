@@ -35,6 +35,7 @@ def test_api_descriptor():
         assert kwargs['params']
 
     api = APIDescriptor(request)
+    assert api.url == '/'
     api.resources[22].post(params={'q': 'test_q'}, data={'f': 'test_f'})
 
     def request(method, url, **kwargs):
@@ -43,6 +44,8 @@ def test_api_descriptor():
         assert kwargs['data'] == {'q': 'test_q'}
 
     api = APIDescriptor(request)
+    assert api.res[43]['get']['url'].url == '/res/43/get/url'
+
     api.res[43]['get'].post({'q': 'test_q'})
 
 
@@ -66,6 +69,7 @@ def test_api_client(loop, response):
 
     # Initialize a session
     loop.run_until_complete(client.startup())
+    assert client.api.users.klen.url == 'https://api.github.com/users/klen'
 
     with mock.patch.object(client.session, 'request') as mocked:
         mocked.return_value = response({'test': 'passed'})
