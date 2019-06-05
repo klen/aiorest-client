@@ -15,7 +15,7 @@ __version__ = "0.2.1"
 __license__ = "MIT license"
 
 
-AIOHTTP_OPTIONS = set(inspect.signature(aiohttp.request).parameters)
+AIOHTTP_OPTIONS = set(inspect.signature(aiohttp.client.ClientSession._request).parameters)
 
 
 def acoro(value):
